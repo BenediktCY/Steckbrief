@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chargensteckbrief</title>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3347;
+      --accent: #4f8ef7; --accent2: #7c5cbf; --text: #e8eaf0; --muted: #7a7f99;
+      --light: #3d4260; --success: #2ecc71; --danger: #e74c3c; --warn: #f39c12;
+      --radius: 10px; --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    .screen { display: none; padding: 1rem; max-width: 680px; margin: 0 auto; padding-bottom: 3rem; }
+    .screen.active { display: block; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    h2 { font-size: 17px; font-weight: 600; margin-bottom: 1rem; }
+    h3 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; }
+    .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1rem; border-bottom: 1px solid var(--border); margin-bottom: .5rem; }
+    .header-title { font-size: 15px; font-weight: 700; color: var(--accent); }
+    .header-user { font-size: 12px; color: var(--muted); cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); }
+    .header-user:hover { border-color: var(--accent); color: var(--text); }
+    .back-btn { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; font-family: var(--font); padding: 0 0 1rem 0; display: block; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: .75rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .6rem; }
+    .btn { font-family: var(--font); font-size: 14px; font-weight: 500; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-full { width: 100%; }
+    .btn-sm { font-size: 12px; padding: 6px 12px; }
+    .btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+    .tile { background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 500; transition: border-color .15s; text-align: center; }
+    .tile:hover { border-color: var(--accent); }
+    .tile.selected { border-color: var(--accent); background: rgba(79,142,247,.12); color: var(--accent); }
+    .tile-sm { padding: 8px 12px; font-size: 13px; }
+    .progress { background: var(--border); border-radius: 4px; height: 4px; margin-bottom: 1.25rem; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+    .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .question-text { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
+    .rating-row { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .rating-btn { flex: 1; min-width: 60px; background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 10px 6px; cursor: pointer; font-size: 12px; text-align: center; color: var(--muted); transition: all .15s; }
+    .rating-btn.selected { border-color: var(--accent); background: rgba(79,142,247,.15); color: var(--accent); font-weight: 600; }
+    .yesno-row { display: flex; gap: .75rem; }
+    .yesno-btn { flex: 1; padding: 12px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; text-align: center; background: var(--surface2); color: var(--muted); transition: all .15s; }
+    .yesno-btn.ja.selected { border-color: var(--success); background: rgba(46,204,113,.12); color: var(--success); }
+    .yesno-btn.nein.selected { border-color: var(--danger); background: rgba(231,76,60,.12); color: var(--danger); }
+    .number-input, .textarea-input { background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 15px; color: var(--text); width: 100%; font-family: var(--font); }
+    .number-input:focus, .textarea-input:focus { outline: none; border-color: var(--accent); }
+    .textarea-input { resize: vertical; min-height: 80px; font-size: 14px; }
+    .einheit { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 14px; color: var(--text); width: 100%; font-family: var(--font); }
+    .input:focus { outline: none; border-color: var(--accent); }
+    label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 5px; }
+    .field { margin-bottom: 1rem; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; }
+    .tab { font-size: 13px; padding: 8px 14px; background: none; border: none; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: var(--font); }
+    .tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .badge-offen { background: rgba(243,156,18,.15); color: var(--warn); }
+    .badge-done { background: rgba(46,204,113,.15); color: var(--success); }
+    .badge-Admin { background: rgba(79,142,247,.15); color: var(--accent); }
+    .badge-Experte { background: rgba(124,92,191,.15); color: var(--accent2); }
+    .badge-Mitarbeiter { background: rgba(122,127,153,.15); color: var(--muted); }
+    .list-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: .5rem; display: flex; justify-content: space-between; align-items: center; }
+    .list-item-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+    .list-item-meta { font-size: 12px; color: var(--muted); }
+    .summary-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .summary-row:last-child { border: none; }
+    .summary-label { font-size: 13px; color: var(--muted); flex: 1; }
+    .summary-value { font-size: 13px; font-weight: 500; text-align: right; flex: 1; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 12px; margin: 3px; }
+    .tag-del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 0; }
+    select.input { cursor: pointer; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+    .kpi-val { font-size: 28px; font-weight: 700; display: block; font-variant-numeric: tabular-nums; }
+    .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--surface2); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tr:hover td { background: var(--surface2); cursor: pointer; }
+    .detail-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 20px; }
+    .detail-field-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .detail-field-val { font-size: 14px; font-weight: 500; }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 360px; margin: 1rem; }
+    .inaktiv-section { margin-top: 1.5rem; opacity: .7; }
+    .inaktiv-section .list-item { border-style: dashed; }
+    .error-text { color: var(--danger); font-size: 13px; margin-bottom: .75rem; }
+    .step-nav { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; font-size: 12px; }
+    .step-pill { padding: 3px 12px; border-radius: 20px; font-weight: 500; }
+    .step-pill.active { background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid var(--accent); }
+    .step-pill.done { color: var(--success); }
+    .step-pill.pending { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="header" id="appHeader" style="display:none">
+  <span class="header-title">Chargensteckbrief</span>
+  <span class="header-user" id="headerUser" onclick="showChangePassword()" title="Passwort ändern">–</span>
+</div>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div style="text-align:center; padding:3rem 1rem 2rem">
+    <div style="font-size:48px; margin-bottom:1rem">🌿</div>
+    <h1>Chargensteckbrief</h1>
+    <div style="max-width:300px; margin:0 auto; text-align:left; margin-top:1.5rem">
+      <div class="field">
+        <label>Benutzername</label>
+        <input class="input" id="loginUser" type="text" autocomplete="username" placeholder="benutzername"
+          onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+      </div>
+      <div class="field">
+        <label>Passwort</label>
+        <input class="input" id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLocalLogin()">
+      </div>
+      <p id="loginError" class="error-text" style="display:none"></p>
+      <button class="btn btn-primary btn-full" onclick="doLocalLogin()">Anmelden</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <div style="text-align:center; padding:3rem 1rem 2rem">
+    <div style="font-size:48px;margin-bottom:1rem">🌿</div>
+    <h1>Chargensteckbrief</h1>
+    <button class="btn btn-primary btn-full" onclick="startSetup()" style="margin-top:1.5rem" style="max-width:300px;margin:0 auto .75rem;display:block">Neuen Steckbrief erstellen</button>
+    <button class="btn btn-secondary btn-full" onclick="showScreen('dashboard')" style="max-width:300px;margin:0 auto .75rem;display:block">Dashboard</button>
+    <div id="homeAdminBtn" style="display:none">
+      <button class="btn btn-secondary btn-full" onclick="showScreen('admin')" style="max-width:300px;margin:0 auto;display:block">⚙ Administration</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="screen-setup">
+  <button class="back-btn" onclick="goHome()">← Zurück</button>
+  <div class="step-nav">
+    <span class="step-pill active" id="navStammdaten">Stammdaten</span>
+    <span style="color:var(--muted)">→</span>
+    <span class="step-pill pending" id="navFragen">Fragen</span>
+  </div>
+  <h2 id="setupTitle">Setup</h2>
+  <div class="progress"><div class="progress-bar" id="setupProgress"></div></div>
+  <div id="setupContent"></div>
+</div>
+
+<!-- FRAGEN -->
+<div class="screen" id="screen-questions">
+  <button class="back-btn" onclick="prevQuestion()">← Zurück</button>
+  <div class="step-nav">
+    <span class="step-pill done">✓ Stammdaten</span>
+    <span style="color:var(--muted)">→</span>
+    <span class="step-pill active" id="navFragenCounter">Fragen</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+    <h2 style="margin:0">Qualitätsprüfung</h2>
+    <span class="muted" id="questionCounter"></span>
+  </div>
+  <div class="progress"><div class="progress-bar" id="questionProgress"></div></div>
+  <div id="questionContent"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary btn-full" id="btnNextQ" onclick="nextQuestion()">Weiter →</button>
+  </div>
+</div>
+
+<!-- ZUSAMMENFASSUNG -->
+<div class="screen" id="screen-summary">
+  <button class="back-btn" onclick="showScreen('questions')">← Zurück</button>
+  <h2>Zusammenfassung</h2>
+  <div id="summarySetup" class="card" style="margin-bottom:1rem"></div>
+  <div id="summaryAnswers"></div>
+  <div class="btn-row">
+    <button class="btn btn-success btn-full" onclick="abschliessen()">✓ Abschließen & Speichern</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <button class="back-btn" onclick="goHome()">← Zurück</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <h2 style="margin:0">Dashboard</h2>
+    <div style="display:flex;gap:.4rem">
+      <button class="btn btn-sm btn-secondary" onclick="exportCSV()">↓ CSV</button>
+      <button class="btn btn-sm btn-secondary" onclick="exportXLSX()">↓ Excel</button>
+    </div>
+  </div>
+  <div id="dashboardContent"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="screen-detail">
+  <button class="back-btn" onclick="showScreen('dashboard')">← Zurück</button>
+  <div id="detailContent"></div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="screen-admin">
+  <button class="back-btn" onclick="goHome()">← Zurück</button>
+  <h2>Administration</h2>
+  <div class="tabs" id="adminTabs"></div>
+  <div id="adminContent"></div>
+</div>
+
+<!-- PASSWORT-MODAL -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal-box">
+    <h2 id="pwModalTitle" style="margin-bottom:1rem">Passwort ändern</h2>
+    <div class="field" id="pwOldField">
+      <label>Altes Passwort</label>
+      <input class="input" id="pwOld" type="password" placeholder="Aktuelles Passwort">
+    </div>
+    <div class="field">
+      <label>Neues Passwort</label>
+      <input class="input" id="pwNew" type="password" placeholder="Mindestens 6 Zeichen"
+        onkeydown="if(event.key==='Enter')document.getElementById('pwConfirm').focus()">
+    </div>
+    <div class="field">
+      <label>Bestätigen</label>
+      <input class="input" id="pwConfirm" type="password" placeholder="Passwort wiederholen"
+        onkeydown="if(event.key==='Enter')doChangePassword()">
+    </div>
+    <p id="pwError" class="error-text" style="display:none"></p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closePwModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="doChangePassword()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let state = {
+  user: null,
+  fragen: [],
+  stammdaten: {},
+  setup: { anbauer: null, sorte: null, thc_klasse: null, interne_nr: '' },
+  setupStep: 0,
+  eintragId: null,
+  currentFrage: 0,
+  antworten: {},
+  adminTab: 0,
+};
+let pwModalUserId = null;
+let pwModalAdminReset = false;
+
+// ── INIT ──────────────────────────────────────────────
+async function init() {
+  window.addEventListener('message', async (e) => {
+    if (e.data?.type === 'canify-user') {
+      await loginWithCanify(e.data.user);
+    }
+  });
+  const params = new URLSearchParams(window.location.search);
+  const canifyId = params.get('canify_id');
+  const username = params.get('username');
+  const rolle = params.get('rolle');
+  if (canifyId && username) await loginWithCanify({ id: canifyId, username, role: rolle });
+  if (window.parent !== window) window.parent.postMessage({ type: 'steckbrief-ready' }, '*');
+}
+
+function afterLogin(user) {
+  state.user = user;
+  document.getElementById('headerUser').textContent = '@' + user.username + ' · ' + user.rolle;
+  document.getElementById('appHeader').style.display = 'flex';
+  document.getElementById('homeAdminBtn').style.display = (user.rolle === 'Admin' || user.rolle === 'Experte') ? 'block' : 'none';
+}
+
+async function doLocalLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!username || !password) {
+    errEl.textContent = 'Bitte Benutzername und Passwort eingeben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/login-local`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      errEl.textContent = err.error || 'Anmeldung fehlgeschlagen';
+      errEl.style.display = 'block';
+      return;
+    }
+    const user = await res.json();
+    afterLogin(user);
+    await loadStammdaten();
+    await loadFragen();
+    showScreen('home');
+  } catch(e) {
+    errEl.textContent = 'Verbindungsfehler. Bitte erneut versuchen.';
+    errEl.style.display = 'block';
+  }
+}
+
+async function loginWithCanify(canifyUser) {
+  try {
+    const res = await fetch(`${API}/api/sync-user`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canify_id: canifyUser.id, username: canifyUser.username, rolle: canifyUser.role || canifyUser.rolle, password: '' })
+    });
+    const user = await res.json();
+    afterLogin(user);
+    await loadStammdaten();
+    await loadFragen();
+    showScreen('home');
+  } catch(e) { console.error('Canify-Login fehlgeschlagen:', e); }
+}
+
+async function loadStammdaten() {
+  const [anbauer, sorten, thc] = await Promise.all([
+    fetch(`${API}/api/stammdaten/anbauer`).then(r => r.json()),
+    fetch(`${API}/api/stammdaten/sorte`).then(r => r.json()),
+    fetch(`${API}/api/stammdaten/thc_klasse`).then(r => r.json()),
+  ]);
+  state.stammdaten = { anbauer, sorte: sorten, thc_klasse: thc };
+}
+
+async function loadFragen() {
+  state.fragen = await fetch(`${API}/api/fragen`).then(r => r.json());
+}
+
+// ── PASSWORT-MODAL ────────────────────────────────────
+function showChangePassword(userId, isAdminReset) {
+  pwModalUserId = userId || state.user?.id;
+  pwModalAdminReset = !!isAdminReset;
+  document.getElementById('pwModalTitle').textContent = isAdminReset ? 'Passwort zurücksetzen' : 'Passwort ändern';
+  document.getElementById('pwOldField').style.display = isAdminReset ? 'none' : 'block';
+  document.getElementById('pwOld').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  document.getElementById('pwError').style.display = 'none';
+  document.getElementById('pwModal').classList.add('open');
+}
+
+function closePwModal() {
+  document.getElementById('pwModal').classList.remove('open');
+}
+
+async function doChangePassword() {
+  const newPw = document.getElementById('pwNew').value;
+  const confirm = document.getElementById('pwConfirm').value;
+  const oldPw = document.getElementById('pwOld').value;
+  const errEl = document.getElementById('pwError');
+  errEl.style.display = 'none';
+
+  if (newPw.length < 6) {
+    errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = 'Passwörter stimmen nicht überein.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const body = { newPassword: newPw };
+  if (pwModalAdminReset) body.adminReset = true;
+  else body.oldPassword = oldPw;
+
+  const res = await fetch(`${API}/api/users/${pwModalUserId}/password`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    errEl.textContent = err.error || 'Fehler';
+    errEl.style.display = 'block';
+    return;
+  }
+  closePwModal();
+  alert('Passwort erfolgreich geändert.');
+}
+
+// ── NAVIGATION ────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name)?.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'admin') loadAdmin();
+}
+
+function goHome() { showScreen('home'); }
+
+// ── SETUP ─────────────────────────────────────────────
+const SETUP_STEPS = [
+  { key: 'anbauer',    label: 'Anbauer',       pflicht: false, typ: 'liste' },
+  { key: 'sorte',      label: 'Sorte',          pflicht: false, typ: 'liste' },
+  { key: 'thc_klasse', label: 'THC-Klasse',     pflicht: false, typ: 'liste' },
+  { key: 'interne_nr', label: 'Interne Nummer', pflicht: true,  typ: 'text' },
+];
+
+async function startSetup() {
+  if (!state.user) { alert('Bitte zuerst anmelden.'); return; }
+  state.setup = { anbauer: null, sorte: null, thc_klasse: null, interne_nr: '' };
+  state.setupStep = 0;
+  state.antworten = {};
+  state.eintragId = null;
+  showScreen('setup');
+  renderSetupStep();
+}
+
+function renderSetupStep() {
+  const step = SETUP_STEPS[state.setupStep];
+  const total = SETUP_STEPS.length;
+  document.getElementById('setupTitle').textContent = step.label + (step.pflicht ? ' *' : ' (optional)');
+  document.getElementById('setupProgress').style.width = ((state.setupStep + 1) / total * 100) + '%';
+  document.getElementById('navStammdaten').textContent = `Stammdaten (${state.setupStep + 1}/${total})`;
+  document.getElementById('navFragen').textContent = `Fragen (${state.fragen.length})`;
+
+
+  let html = '';
+  if (step.typ === 'text') {
+    html = `<div class="field">
+      <label>Interne Nummer *</label>
+      <input class="input" id="internNrInput" type="text" placeholder="z.B. CH-2024-001"
+        value="${state.setup.interne_nr || ''}"
+        oninput="state.setup.interne_nr=this.value.trim()"
+        onkeydown="if(event.key==='Enter')nextSetupStep()">
+    </div>
+    <div class="btn-row">
+      ${state.setupStep > 0 ? `<button class="btn btn-secondary" onclick="prevSetupStep()">← Zurück</button>` : ''}
+      <button class="btn btn-primary" style="flex:1" onclick="nextSetupStep()">Weiter →</button>
+    </div>`;
+  } else {
+    const items = state.stammdaten[step.key] || [];
+    const selected = state.setup[step.key];
+    html = `<div class="card-grid">
+      <div class="tile tile-sm ${selected === '' ? 'selected' : ''}" onclick="selectSetup('${step.key}','')">
+        <span style="color:var(--muted)">– Überspringen –</span>
+      </div>
+      ${items.map(item =>
+        `<div class="tile tile-sm ${selected === item.wert ? 'selected' : ''}"
+          onclick="selectSetup('${step.key}','${item.wert.replace(/'/g, "\\'")}')">
+          ${item.wert}
+        </div>`
+      ).join('')}
+    </div>
+    ${state.setupStep > 0 ? `<div class="btn-row"><button class="btn btn-secondary" onclick="prevSetupStep()">← Zurück</button></div>` : ''}`;
+  }
+  document.getElementById('setupContent').innerHTML = html;
+  if (step.typ === 'text') setTimeout(() => document.getElementById('internNrInput')?.focus(), 50);
+}
+
+function selectSetup(key, value) {
+  state.setup[key] = value;
+  setTimeout(() => nextSetupStep(), 180);
+}
+
+function prevSetupStep() {
+  if (state.setupStep > 0) { state.setupStep--; renderSetupStep(); }
+  else goHome();
+}
+
+async function nextSetupStep() {
+  const step = SETUP_STEPS[state.setupStep];
+  if (step.pflicht && !state.setup[step.key]?.trim?.() && !state.setup[step.key]) {
+    document.getElementById('internNrInput')?.style.setProperty('border-color', 'var(--danger)');
+    return;
+  }
+  state.setupStep++;
+  if (state.setupStep >= SETUP_STEPS.length) {
+    try {
+      const res = await fetch(`${API}/api/eintraege`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: state.user.id, ...state.setup })
+      });
+      if (!res.ok) { alert('Fehler beim Speichern: ' + (await res.text())); return; }
+      const data = await res.json();
+      state.eintragId = data.id;
+      state.currentFrage = 0;
+      showScreen('questions');
+      renderQuestion();
+    } catch(e) { alert('Verbindungsfehler: ' + e.message); return; }
+  } else {
+    renderSetupStep();
+  }
+}
+
+// ── FRAGEN ────────────────────────────────────────────
+function renderQuestion() {
+  const fragen = state.fragen;
+  const idx = state.currentFrage;
+  const f = fragen[idx];
+  if (!f) return;
+
+  const total = fragen.length;
+  document.getElementById('questionCounter').textContent = `${idx + 1} / ${total}`;
+  document.getElementById('questionProgress').style.width = ((idx + 1) / total * 100) + '%';
+  const verbleibend = total - idx - 1;
+  document.getElementById('navFragenCounter').textContent = verbleibend > 0 ? `Fragen (noch ${verbleibend})` : 'Fragen (letzte)';
+
+  const btnNext = document.getElementById('btnNextQ');
+  btnNext.textContent = idx === total - 1 ? 'Zusammenfassung →' : 'Weiter →';
+
+  const wert = state.antworten[f.id];
+  let input = '';
+
+  if (f.typ === 'rating') {
+    const opts = JSON.parse(f.optionen || '[]');
+    input = `<div class="rating-row">${opts.map((o, i) =>
+      `<button class="rating-btn ${wert == i ? 'selected' : ''}" onclick="setAntwort(${f.id},${i},'rating')">${o}</button>`
+    ).join('')}</div>`;
+  } else if (f.typ === 'select') {
+    const opts = JSON.parse(f.optionen || '[]');
+    input = `<div class="card-grid">${opts.map(o =>
+      `<div class="tile tile-sm ${wert === o ? 'selected' : ''}" onclick="setAntwort(${f.id},'${o.replace(/'/g,"\\'")}','select')">${o}</div>`
+    ).join('')}</div>`;
+  } else if (f.typ === 'yesno') {
+    input = `<div class="yesno-row">
+      <button class="yesno-btn ja ${wert === 'ja' ? 'selected' : ''}" onclick="setAntwort(${f.id},'ja','yesno')">✓ Ja</button>
+      <button class="yesno-btn nein ${wert === 'nein' ? 'selected' : ''}" onclick="setAntwort(${f.id},'nein','yesno')">✕ Nein</button>
+    </div>`;
+  } else if (f.typ === 'number') {
+    input = `<input class="number-input" type="number" step="0.01" placeholder="0.0"
+      value="${wert || ''}" oninput="setAntwort(${f.id},this.value,'number')">`;
+  } else if (f.typ === 'textarea') {
+    input = `<textarea class="textarea-input" placeholder="Bemerkungen..."
+      oninput="setAntwort(${f.id},this.value,'textarea')">${wert || ''}</textarea>`;
+  }
+
+  document.getElementById('questionContent').innerHTML = `
+    <div class="question-card">
+      <p class="question-text">${f.frage}${!f.pflicht ? ' <span style="color:var(--muted);font-size:12px">(optional)</span>' : ''}</p>
+      ${input}
+    </div>`;
+}
+
+function setAntwort(frageId, wert, typ) {
+  state.antworten[frageId] = wert;
+  renderQuestion();
+  if (typ === 'rating' || typ === 'select' || typ === 'yesno') setTimeout(() => nextQuestion(), 250);
+}
+
+function nextQuestion() {
+  const f = state.fragen[state.currentFrage];
+  if (f?.pflicht && (state.antworten[f.id] === undefined || state.antworten[f.id] === '')) {
+    document.getElementById('questionContent').querySelector('.question-card').style.borderColor = 'var(--danger)';
+    return;
+  }
+  if (state.currentFrage < state.fragen.length - 1) {
+    state.currentFrage++;
+    renderQuestion();
+  } else {
+    renderSummary();
+    showScreen('summary');
+  }
+}
+
+function prevQuestion() {
+  if (state.currentFrage > 0) { state.currentFrage--; renderQuestion(); }
+  else { showScreen('setup'); state.setupStep = SETUP_STEPS.length - 1; renderSetupStep(); }
+}
+
+// ── ZUSAMMENFASSUNG ───────────────────────────────────
+function renderSummary() {
+  const s = state.setup;
+  document.getElementById('summarySetup').innerHTML = `
+    ${s.anbauer ? `<div class="summary-row"><span class="summary-label">Anbauer</span><span class="summary-value">${s.anbauer}</span></div>` : ''}
+    ${s.sorte ? `<div class="summary-row"><span class="summary-label">Sorte</span><span class="summary-value">${s.sorte}</span></div>` : ''}
+    ${s.thc_klasse ? `<div class="summary-row"><span class="summary-label">THC-Klasse</span><span class="summary-value">${s.thc_klasse}</span></div>` : ''}
+    <div class="summary-row"><span class="summary-label">Interne Nummer</span><span class="summary-value">${s.interne_nr}</span></div>`;
+
+  let html = '<h3 style="margin-bottom:.75rem">Antworten</h3>';
+  state.fragen.forEach(f => {
+    const wert = state.antworten[f.id];
+    let anzeige = wert !== undefined && wert !== '' ? String(wert) : '<span style="color:var(--muted)">–</span>';
+    if (f.typ === 'rating') { try { const opts = JSON.parse(f.optionen||'[]'); anzeige = opts[wert] ?? anzeige; } catch(e){} }
+    if (f.typ === 'yesno') anzeige = wert === 'ja' ? '✓ Ja' : wert === 'nein' ? '✕ Nein' : '–';
+    html += `<div class="summary-row"><span class="summary-label">${f.frage}</span><span class="summary-value">${anzeige}</span></div>`;
+  });
+  document.getElementById('summaryAnswers').innerHTML = `<div class="card">${html}</div>`;
+}
+
+async function abschliessen() {
+  const antworten = Object.entries(state.antworten).map(([frage_id, wert]) => ({ frage_id: parseInt(frage_id), wert }));
+  await fetch(`${API}/api/eintraege/${state.eintragId}/antworten`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ antworten })
+  });
+  await fetch(`${API}/api/eintraege/${state.eintragId}/abschliessen`, { method: 'PATCH' });
+  alert('Steckbrief gespeichert ✓');
+  goHome();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+async function loadDashboard() {
+  if (!state.user) {
+    document.getElementById('dashboardContent').innerHTML =
+      '<p class="muted">Warte auf Anmeldung... <button class="btn btn-sm btn-secondary" style="margin-left:8px" onclick="loadDashboard()">Neu laden</button></p>';
+    return;
+  }
+  document.getElementById('dashboardContent').innerHTML = '<p class="muted">Laden...</p>';
+
+  const eintraege = await fetch(`${API}/api/eintraege`).then(r => r.json());
+  const abgeschlossen = eintraege.filter(e => e.abgeschlossen == 1);
+  const sichtbar = (state.user.rolle === 'Admin' || state.user.rolle === 'Experte')
+    ? abgeschlossen
+    : abgeschlossen.filter(e => e.user_id === state.user.id);
+
+  if (!sichtbar.length) {
+    document.getElementById('dashboardContent').innerHTML = '<p class="muted">Noch keine abgeschlossenen Steckbriefe.</p>';
+    return;
+  }
+
+  const heute = new Date().toDateString();
+  const heuteAnzahl = sichtbar.filter(e => new Date(e.erstellt_am).toDateString() === heute).length;
+  const sorten = [...new Set(sichtbar.map(e => e.sorte).filter(Boolean))].length;
+
+  let html = `<div class="kpi-grid">
+    <div class="kpi"><span class="kpi-val" style="color:var(--accent)">${sichtbar.length}</span><span class="kpi-label">Gesamt</span></div>
+    <div class="kpi"><span class="kpi-val" style="color:var(--success)">${heuteAnzahl}</span><span class="kpi-label">Heute</span></div>
+    <div class="kpi"><span class="kpi-val">${sorten}</span><span class="kpi-label">Sorten</span></div>
+  </div>`;
+
+  html += `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>#</th><th>Datum</th><th>Anbauer</th><th>Sorte</th><th>THC</th><th>Interne Nr.</th><th>Mitarbeiter</th>
+    </tr></thead>
+    <tbody>
+      ${sichtbar.map(e => `
+        <tr onclick="zeigeDetail(${e.id})">
+          <td style="color:var(--muted);font-size:12px">${e.id}</td>
+          <td>${new Date(e.erstellt_am).toLocaleDateString('de-DE')}</td>
+          <td>${e.anbauer || '–'}</td>
+          <td>${e.sorte || '–'}</td>
+          <td>${e.thc_klasse || '–'}</td>
+          <td style="font-weight:600">${e.interne_nr || e.charge || '–'}</td>
+          <td style="color:var(--muted)">@${e.username}</td>
+        </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+
+  document.getElementById('dashboardContent').innerHTML = html;
+}
+
+async function zeigeDetail(id) {
+  const e = await fetch(`${API}/api/eintraege/${id}`).then(r => r.json());
+  const canDelete = state.user?.rolle === 'Admin';
+
+  let html = `<div class="detail-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+      <h2 style="margin:0">Steckbrief #${e.id}</h2>
+      ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="loescheEintrag(${e.id})">Löschen</button>` : ''}
+    </div>
+    <div class="detail-grid">
+      <div><div class="detail-field-label">Interne Nummer</div><div class="detail-field-val">${e.interne_nr || e.charge || '–'}</div></div>
+      <div><div class="detail-field-label">Mitarbeiter</div><div class="detail-field-val">@${e.username}</div></div>
+      ${e.anbauer ? `<div><div class="detail-field-label">Anbauer</div><div class="detail-field-val">${e.anbauer}</div></div>` : ''}
+      ${e.sorte ? `<div><div class="detail-field-label">Sorte</div><div class="detail-field-val">${e.sorte}</div></div>` : ''}
+      ${e.thc_klasse ? `<div><div class="detail-field-label">THC-Klasse</div><div class="detail-field-val">${e.thc_klasse}</div></div>` : ''}
+      <div><div class="detail-field-label">Datum</div><div class="detail-field-val">${new Date(e.erstellt_am).toLocaleDateString('de-DE')}</div></div>
+    </div>
+  </div>
+  <h3>Prüfergebnisse</h3>
+  <div class="card">`;
+
+  if (e.antworten?.length) {
+    e.antworten.forEach(a => {
+      let wert = a.wert;
+      if (a.typ === 'rating') { try { const opts = JSON.parse(a.optionen||'[]'); wert = opts[wert] ?? wert; } catch(x){} }
+      if (a.typ === 'yesno') wert = wert === 'ja' ? '✓ Ja' : '✕ Nein';
+      html += `<div class="summary-row"><span class="summary-label">${a.frage}</span><span class="summary-value">${wert || '–'}</span></div>`;
+    });
+  } else {
+    html += '<p class="muted">Keine Antworten.</p>';
+  }
+  html += '</div>';
+
+  document.getElementById('detailContent').innerHTML = html;
+  showScreen('detail');
+}
+
+async function loescheEintrag(id) {
+  if (!confirm('Eintrag wirklich löschen?')) return;
+  await fetch(`${API}/api/eintraege/${id}`, { method: 'DELETE' });
+  showScreen('dashboard');
+}
+
+function exportCSV() { window.open(`${API}/api/export/csv`, '_blank'); }
+function exportXLSX() { window.open(`${API}/api/export/xlsx`, '_blank'); }
+
+// ── ADMIN ─────────────────────────────────────────────
+function loadAdmin() {
+  if (!state.user || (state.user.rolle !== 'Admin' && state.user.rolle !== 'Experte')) { goHome(); return; }
+  const tabs = state.user.rolle === 'Admin' ? ['Fragen', 'Stammdaten', 'Mitarbeiter'] : ['Fragen', 'Stammdaten'];
+  document.getElementById('adminTabs').innerHTML = tabs.map((t, i) =>
+    `<button class="tab ${state.adminTab === i ? 'active' : ''}" onclick="switchAdminTab(${i})">${t}</button>`
+  ).join('');
+  renderAdminTab();
+}
+
+function switchAdminTab(i) {
+  state.adminTab = i;
+  document.querySelectorAll('#adminTabs .tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
+  renderAdminTab();
+}
+
+async function renderAdminTab() {
+  const tabs = state.user.rolle === 'Admin' ? ['Fragen', 'Stammdaten', 'Mitarbeiter'] : ['Fragen', 'Stammdaten'];
+  const tab = tabs[state.adminTab];
+  if (tab === 'Fragen') await renderFragenAdmin();
+  else if (tab === 'Stammdaten') await renderListenAdmin();
+  else if (tab === 'Mitarbeiter') await renderMitarbeiterAdmin();
+}
+
+// ── FRAGEN ADMIN ──────────────────────────────────────
+async function renderFragenAdmin() {
+  const [fragen, inaktiv] = await Promise.all([
+    fetch(`${API}/api/fragen`).then(r => r.json()),
+    fetch(`${API}/api/fragen/inaktiv`).then(r => r.json()),
+  ]);
+
+  let html = fragen.map(f => `
+    <div class="list-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <div>
+          <div class="list-item-title">${f.reihenfolge}. ${f.frage}</div>
+          <div class="list-item-meta">${f.typ}${!f.pflicht ? ' · optional' : ''}</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-secondary" onclick="editFrage(${f.id})">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="loescheFrage(${f.id})">✕</button>
+        </div>
+      </div>
+      ${f.optionen ? `<div>${JSON.parse(f.optionen).map(o => `<span class="tag">${o}</span>`).join('')}</div>` : ''}
+    </div>`).join('');
+
+  html += `<button class="btn btn-primary" style="margin-top:.75rem" onclick="neueFrage()">+ Neue Frage</button>`;
+
+  if (inaktiv.length) {
+    html += `<div class="inaktiv-section">
+      <h3>Deaktivierte Fragen (${inaktiv.length})</h3>
+      ${inaktiv.map(f => `
+        <div class="list-item">
+          <div>
+            <div class="list-item-title" style="color:var(--muted)">${f.frage}</div>
+            <div class="list-item-meta">ID ${f.id} · ${f.typ}</div>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="reaktiviereFrage(${f.id})">Aktivieren</button>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('adminContent').innerHTML = html;
+}
+
+function neueFrage() {
+  document.getElementById('adminContent').innerHTML = `
+    <div class="card">
+      <h3>Neue Frage</h3>
+      <div class="field"><label>Fragetext *</label><input class="input" id="nfFrage" placeholder="Frage..."></div>
+      <div class="field"><label>Typ</label>
+        <select class="input" id="nfTyp" onchange="updateFrageForm()">
+          <option value="rating">Rating (Skala)</option>
+          <option value="select">Auswahl</option>
+          <option value="yesno">Ja / Nein</option>
+          <option value="number">Zahl</option>
+          <option value="textarea">Freitext</option>
+        </select>
+      </div>
+      <div id="nfOptionen"></div>
+      <div class="field"><label>Reihenfolge</label><input class="input" id="nfReihenfolge" type="number" value="99"></div>
+      <div class="field" style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="nfPflicht" checked>
+        <label style="margin:0;text-transform:none;font-size:14px">Pflichtfeld</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="renderAdminTab()">← Abbrechen</button>
+        <button class="btn btn-primary" onclick="speichereFrage()">Speichern</button>
+      </div>
+    </div>`;
+  updateFrageForm();
+}
+
+function updateFrageForm() {
+  const typ = document.getElementById('nfTyp')?.value;
+  let html = '';
+  if (typ === 'rating' || typ === 'select') html = `<div class="field"><label>Optionen (Komma-getrennt)</label><input class="input" id="nfOptInput" placeholder="Option 1, Option 2, Option 3"></div>`;
+  const el = document.getElementById('nfOptionen');
+  if (el) el.innerHTML = html;
+}
+
+async function speichereFrage() {
+  const typ = document.getElementById('nfTyp').value;
+  const frage = document.getElementById('nfFrage').value.trim();
+  if (!frage) { alert('Fragetext fehlt'); return; }
+  let optionen = null;
+  if (typ === 'rating' || typ === 'select') {
+    const raw = document.getElementById('nfOptInput')?.value || '';
+    optionen = raw.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  await fetch(`${API}/api/fragen`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      typ, frage, optionen,
+      pflicht: document.getElementById('nfPflicht').checked,
+      reihenfolge: parseInt(document.getElementById('nfReihenfolge').value) || 99,
+      erstellt_von: state.user.id
+    })
+  });
+  await loadFragen();
+  renderAdminTab();
+}
+
+async function loescheFrage(id) {
+  if (!confirm('Frage deaktivieren?')) return;
+  await fetch(`${API}/api/fragen/${id}`, { method: 'DELETE' });
+  await loadFragen();
+  renderAdminTab();
+}
+
+async function reaktiviereFrage(id) {
+  await fetch(`${API}/api/fragen/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ aktiv: true })
+  });
+  await loadFragen();
+  renderAdminTab();
+}
+
+async function editFrage(id) {
+  const fragen = await fetch(`${API}/api/fragen`).then(r => r.json());
+  const f = fragen.find(x => x.id === id);
+  if (!f) return;
+  const opts = f.optionen ? JSON.parse(f.optionen).join(', ') : '';
+  document.getElementById('adminContent').innerHTML = `
+    <div class="card">
+      <h3>Frage bearbeiten (ID ${f.id})</h3>
+      <div class="field"><label>Fragetext</label><input class="input" id="efFrage" value="${f.frage}"></div>
+      ${f.optionen ? `<div class="field"><label>Optionen (Komma-getrennt)</label><input class="input" id="efOptionen" value="${opts}"></div>` : ''}
+      <div class="field"><label>Reihenfolge</label><input class="input" id="efReihenfolge" type="number" value="${f.reihenfolge}"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="renderAdminTab()">← Abbrechen</button>
+        <button class="btn btn-primary" onclick="updateFrage(${id}, ${!!f.optionen})">Speichern</button>
+      </div>
+    </div>`;
+}
+
+async function updateFrage(id, hatOptionen) {
+  const body = {
+    frage: document.getElementById('efFrage').value,
+    reihenfolge: parseInt(document.getElementById('efReihenfolge').value),
+  };
+  if (hatOptionen) body.optionen = document.getElementById('efOptionen').value.split(',').map(s => s.trim()).filter(Boolean);
+  await fetch(`${API}/api/fragen/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  await loadFragen();
+  renderAdminTab();
+}
+
+// ── LISTEN ADMIN ──────────────────────────────────────
+async function renderListenAdmin() {
+  const [anbauer, sorten, thc] = await Promise.all([
+    fetch(`${API}/api/stammdaten/anbauer`).then(r => r.json()),
+    fetch(`${API}/api/stammdaten/sorte`).then(r => r.json()),
+    fetch(`${API}/api/stammdaten/thc_klasse`).then(r => r.json()),
+  ]);
+  const gruppen = [
+    { typ: 'anbauer', label: 'Anbauer', items: anbauer },
+    { typ: 'sorte', label: 'Sorten', items: sorten },
+    { typ: 'thc_klasse', label: 'THC-Klassen', items: thc },
+  ];
+  document.getElementById('adminContent').innerHTML = gruppen.map(g => `
+    <div class="card" style="margin-bottom:.75rem">
+      <h3>${g.label}</h3>
+      <div style="margin-bottom:.5rem">${g.items.map(i =>
+        `<span class="tag">${i.wert}<button class="tag-del" onclick="loescheListeneintrag(${i.id},'${g.typ}')">✕</button></span>`
+      ).join('')}</div>
+      <div style="display:flex;gap:.5rem">
+        <input class="input" id="neu_${g.typ}" placeholder="Neuer Eintrag..." style="flex:1"
+          onkeydown="if(event.key==='Enter')addListeneintrag('${g.typ}')">
+        <button class="btn btn-sm btn-primary" onclick="addListeneintrag('${g.typ}')">+</button>
+      </div>
+    </div>`).join('');
+}
+
+async function addListeneintrag(typ) {
+  const input = document.getElementById('neu_' + typ);
+  const wert = input.value.trim();
+  if (!wert) return;
+  await fetch(`${API}/api/stammdaten/${typ}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ wert })
+  });
+  input.value = '';
+  await loadStammdaten();
+  renderAdminTab();
+}
+
+async function loescheListeneintrag(id) {
+  await fetch(`${API}/api/stammdaten/${id}`, { method: 'DELETE' });
+  await loadStammdaten();
+  renderAdminTab();
+}
+
+// ── MITARBEITER ADMIN ─────────────────────────────────
+async function renderMitarbeiterAdmin() {
+  const users = await fetch(`${API}/api/users`).then(r => r.json());
+  const ROLLEN = ['Mitarbeiter', 'Experte', 'Admin'];
+
+  let html = users.map(u => `
+    <div class="list-item" style="${!u.aktiv ? 'opacity:.5' : ''}">
+      <div>
+        <div class="list-item-title">@${u.username}${u.canify_id ? ' <span style="color:var(--muted);font-size:11px">(Canify)</span>' : ''}</div>
+        <div class="list-item-meta"><span class="badge badge-${u.rolle}">${u.rolle}</span>${!u.aktiv ? ' <span style="color:var(--danger);font-size:11px">· inaktiv</span>' : ''}</div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-sm btn-secondary" onclick="editUser(${u.id})" title="Bearbeiten">✎</button>
+        <button class="btn btn-sm btn-secondary" onclick="showChangePassword(${u.id}, true)" title="Passwort zurücksetzen">🔑</button>
+        <button class="btn btn-sm ${u.aktiv ? 'btn-danger' : 'btn-success'}" onclick="toggleUserAktiv(${u.id}, ${u.aktiv})" title="${u.aktiv ? 'Deaktivieren' : 'Aktivieren'}">${u.aktiv ? '✕' : '✓'}</button>
+      </div>
+    </div>`).join('') || '<p class="muted">Keine Mitarbeiter.</p>';
+
+  html += `
+    <div class="card" style="margin-top:1rem">
+      <h3>Neuen Mitarbeiter anlegen</h3>
+      <div class="field"><label>Benutzername *</label><input class="input" id="nuUsername" placeholder="benutzername"></div>
+      <div class="field"><label>Passwort *</label><input class="input" id="nuPassword" type="password" placeholder="Passwort"></div>
+      <div class="field"><label>Rolle</label>
+        <select class="input" id="nuRolle">
+          <option value="Mitarbeiter">Mitarbeiter</option>
+          <option value="Experte">Experte</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="createUser()">+ Anlegen</button>
+      </div>
+    </div>`;
+
+  document.getElementById('adminContent').innerHTML = html;
+}
+
+async function createUser() {
+  const username = document.getElementById('nuUsername').value.trim();
+  const password = document.getElementById('nuPassword').value;
+  const rolle = document.getElementById('nuRolle').value;
+  if (!username || !password) { alert('Benutzername und Passwort sind Pflichtfelder.'); return; }
+  const res = await fetch(`${API}/api/users`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, rolle })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    alert(err.error || 'Fehler beim Anlegen');
+    return;
+  }
+  renderAdminTab();
+}
+
+async function editUser(id) {
+  const users = await fetch(`${API}/api/users`).then(r => r.json());
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  const ROLLEN = ['Mitarbeiter', 'Experte', 'Admin'];
+  document.getElementById('adminContent').innerHTML = `
+    <div class="card">
+      <h3>Mitarbeiter bearbeiten</h3>
+      <div class="field"><label>Benutzername</label><input class="input" id="euUsername" value="${u.username}"></div>
+      <div class="field"><label>Rolle</label>
+        <select class="input" id="euRolle">
+          ${ROLLEN.map(r => `<option value="${r}" ${u.rolle===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="renderAdminTab()">← Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveEditUser(${id})">Speichern</button>
+      </div>
+    </div>`;
+}
+
+async function saveEditUser(id) {
+  const username = document.getElementById('euUsername').value.trim();
+  const rolle = document.getElementById('euRolle').value;
+  if (!username) { alert('Benutzername darf nicht leer sein.'); return; }
+  const res = await fetch(`${API}/api/users/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, rolle })
+  });
+  if (!res.ok) { const e = await res.json(); alert(e.error || 'Fehler'); return; }
+  renderAdminTab();
+}
+
+async function toggleUserAktiv(id, aktuellAktiv) {
+  await fetch(`${API}/api/users/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ aktiv: aktuellAktiv ? 0 : 1 })
+  });
+  renderAdminTab();
+}
+
+init();
+</script>
+</body>
+</html>
